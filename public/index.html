@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat App</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        #messages { list-style-type: none; margin: 0; padding: 0; }
+        #messages li { padding: 8px; margin-bottom: 2px; background-color: #f3f3f3; }
+        #message-form { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <ul id="messages"></ul>
+    <form id="message-form">
+        <input id="user" placeholder="Your name" />
+        <input id="message" placeholder="Type a message..." autocomplete="off" />
+        <button>Send</button>
+    </form>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        var socket = io();
+
+        // Form submission with new message in input box
+        document.getElementById('message-form').onsubmit = function(e) {
+            e.preventDefault(); // prevents page reloading
+            socket.emit('chat-message', { user: document.getElementById('user').value, message: document.getElementById('message').value });
+            document.getElementById('message').value = ''; // clear the message input box
+            return false;
+        };
+
+        // Listen for chat-message events from the server
+        socket.on('chat-message', function(data) {
+            var item = document.createElement('li');
+            item.textContent = data.user + ": " + data.message;
+            document.getElementById('messages').appendChild(item);
+            window.scrollTo(0, document.body.scrollHeight); // Scroll to the bottom of the message list
+        });
+
+        // Load initial messages received from the server
+        socket.on('output-messages', function(messages) {
+            messages.forEach(function(message) {
+                var item = document.createElement('li');
+                item.textContent = message.user + ": " + message.message;
+                document.getElementById('messages').appendChild(item);
+            });
+            window.scrollTo(0, document.body.scrollHeight); // Scroll to the bottom of the message list
+        });
+    </script>
+</body>
+</html>
